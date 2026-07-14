@@ -111,16 +111,26 @@ for i in range(st.session_state.recipient_count):
             days_str = str(days)
     
     if r_name.strip():
-        # 金額計算
+        # 金額と計算式の作成
         if project_type == "対面mtg":
-            reward = 800
+            unit_price = 800
         else:
-            reward = 1000 * days
+            unit_price = 1000
+            
+        reward = unit_price * days
+        
+        # 12列目用の文字列: "日数(ある場合)×単位あたりの金額=合計金額"
+        if needs_days:
+            calc_str = f"{days}×{unit_price}={reward}"
+        else:
+            # 参加日数入力がない区分（1日扱い）の場合
+            calc_str = f"1×{unit_price}={reward}"
             
         recipients_data.append({
             "name": r_name.strip(),
             "days_str": days_str,
-            "reward": reward
+            "reward": reward,
+            "calc_str": calc_str  # ← これを追加
         })
 
 if st.button("＋ 対象者を追加"):
@@ -178,6 +188,7 @@ else:
                         row2[0] = now_str                           # 1列目: タイムスタンプ
                         row2[2] = r["name"]                         # 3列目: スタッフ名(対象者名)
                         row2[3] = f"{combined_project}謝礼"          # 4列目: 企画名+区分+謝礼
+                        row2[11] = r["calc_str"]                    # 12列目: 計算式
                         row2[12] = r["reward"]                      # 13列目: 報酬額
                         rows_for_sheet_2.append(row2)
                         
