@@ -18,7 +18,7 @@ URL_SHEET_2 = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_2_ID/edit"
 # ==========================================
 def get_sheet_client():
     scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-    creds_dict = json.loads(st.secrets["gcp_json"])
+    creds_dict = dict(st.secrets["gcp_json"]) # ← dict() に変更！
     creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     return gspread.authorize(creds)
 
