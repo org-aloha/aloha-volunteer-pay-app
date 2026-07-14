@@ -8,10 +8,10 @@ import json
 # 1. 設定・定数
 # ==========================================
 # スプシ①：謝礼対象者の詳細を管理するシート
-URL_SHEET_1 = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_1_ID/edit"
+URL_SHEET_1 = "https://docs.google.com/spreadsheets/d/1WvU83in9itV8pILiHEkITr6eRFRe5EE_xfHsNxRFD3g/edit?usp=sharing"
 
 # スプシ②：全体のまとめログを記録するシート
-URL_SHEET_2 = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_2_ID/edit"
+URL_SHEET_2 = "https://docs.google.com/spreadsheets/d/13_8_vJI7zO7p2MY0VIYKwNRwHgEAm9frd1pdUCDmEXs/edit?usp=sharing"
 
 # ==========================================
 # 2. 便利関数
