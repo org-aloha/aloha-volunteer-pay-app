@@ -121,10 +121,10 @@ for i in range(st.session_state.recipient_count):
         
         # 12列目用の文字列: "日数(ある場合)×単位あたりの金額=合計金額"
         if needs_days:
-            calc_str = f"{days}日×{unit_price}円={reward}"
+            calc_str = f"{days}日×{unit_price}円={reward}円"
         else:
             # 参加日数入力がない区分（1日扱い）の場合
-            calc_str = f"1日×{unit_price}円={reward}"
+            calc_str = f"1日×{unit_price}円={reward}円"
             
         recipients_data.append({
             "name": r_name.strip(),
