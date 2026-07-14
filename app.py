@@ -176,9 +176,13 @@ else:
                             r["days_str"], 
                             r["reward"]
                         ])
-                    
-                    #append_rows でまとめて一括追記（上書き・消去を防ぎます）
-                    sheet_1.append_rows(rows_for_sheet_1)
+                    next_row_1 = len(sheet_1.col_values(1)) + 1
+
+                    # 指定行から一括書き込み（バージョン違いによるエラーを防ぐため try-except を使用）
+                    try:
+                        sheet_1.update(values=rows_for_sheet_1, range_name=f"A{next_row_1}")
+                    except TypeError:
+                        sheet_1.update(f"A{next_row_1}", rows_for_sheet_1)
 
                     # --- [スプシ②] まとめログの書き込み ---
                     sheet_2 = client.open_by_url(URL_SHEET_2).get_worksheet(0)
@@ -193,9 +197,13 @@ else:
                         row2[12] = r["reward"]                      # 13列目: 報酬額
                         rows_for_sheet_2.append(row2)
                         
-                    # スプシ②も append_rows で一括追記
-                    sheet_2.append_rows(rows_for_sheet_2)
-
+                    next_row_2 = len(sheet_2.col_values(1)) + 1
+                    
+                    try:
+                        sheet_2.update(values=rows_for_sheet_2, range_name=f"A{next_row_2}")
+                    except TypeError:
+                        sheet_2.update(f"A{next_row_2}", rows_for_sheet_2)
+                        
                     st.balloons()
                     st.session_state.show_confirm = False
                     st.session_state.submission_success = True
