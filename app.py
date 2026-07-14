@@ -10,7 +10,7 @@ import json
 # スプシ①：謝礼対象者の詳細を管理するシート
 URL_SHEET_1 = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_1_ID/edit"
 
-# スプシ②：企画単位の全体ログ（サマリー）を記録するシート
+# スプシ②：全体のまとめログを記録するシート
 URL_SHEET_2 = "https://docs.google.com/spreadsheets/d/YOUR_SHEET_2_ID/edit"
 
 # ==========================================
@@ -58,15 +58,31 @@ if 'submission_success' not in st.session_state:
 if st.session_state.submission_success:
     st.success("申請が完了し、スプレッドシートに保存されました！")
     st.button("✨ 入力をクリアして新しく申請する", on_click=clear_form, type="primary")
-    st.stop() # 以降のUIは描画しない
+    st.stop() 
 
 # ① 基本情報入力
 st.subheader("1. 企画情報")
-project_name = st.text_input("企画名", key=f"project_name_{st.session_state.reset_counter}")
 
-# 日時（単日〜複数日対応）
+# 企画区分の選択
+project_type = st.selectbox(
+    "企画区分",
+    ["対面mtg", "キャンパスツアー当日", "サマーキャンプ当日", "東京修学旅行当日", "その他"],
+    key=f"p_type_{st.session_state.reset_counter}"
+)
+
+# 企画区分の選択に応じた追加項目
+project_name = ""
+if project_type == "対面mtg":
+    project_name = st.text_input("企画名", key=f"p_name_{st.session_state.reset_counter}")
+elif project_type == "その他":
+    project_name = st.text_input("企画名（内容）", key=f"p_name_{st.session_state.reset_counter}")
+
+# スプシに書き込むための「企画名＋企画区分」文字列
+combined_project = f"{project_name}{project_type}" if project_name else project_type
+
+# 日時入力
 dates = st.date_input(
-    "日時 (期間の場合は開始日と終了日を選択してください)",
+    "日時 (期間の場合は開始日と終了日を選択)",
     value=[], 
     key=f"dates_{st.session_state.reset_counter}"
 )
@@ -74,13 +90,38 @@ dates = st.date_input(
 st.divider()
 
 # ② 謝礼対象者入力
-st.subheader("2. 謝礼対象者")
-recipients_list = []
+st.subheader("2. 謝礼対象者（スタッフ）")
+recipients_data = []
+
+# 日数入力が必要な区分の定義
+needs_days = project_type in ["サマーキャンプ当日", "東京修学旅行当日"]
 
 for i in range(st.session_state.recipient_count):
-    r_name = st.text_input(f"対象者名 {i+1}", key=f"r_name_{st.session_state.reset_counter}_{i}")
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        r_name = st.text_input(f"対象者名 {i+1}", key=f"r_name_{st.session_state.reset_counter}_{i}")
+    
+    days = 1
+    days_str = ""
+    with col2:
+        if needs_days:
+            # 半角数字（整数）の入力
+            days = st.number_input(f"参加日数", min_value=1, step=1, key=f"r_days_{st.session_state.reset_counter}_{i}")
+            days_str = str(days)
+    
     if r_name.strip():
-        recipients_list.append(r_name.strip())
+        # 金額計算
+        if project_type == "対面mtg":
+            reward = 800
+        else:
+            reward = 1000 * days
+            
+        recipients_data.append({
+            "name": r_name.strip(),
+            "days_str": days_str,
+            "reward": reward
+        })
 
 if st.button("＋ 対象者を追加"):
     st.session_state.recipient_count += 1
@@ -90,20 +131,18 @@ st.divider()
 
 # ③ 送信＆確認フロー
 if not st.session_state.show_confirm:
-    # 最初の「完了」ボタン
     if st.button("完了", type="primary"):
-        if not project_name:
-            st.error("企画名を入力してください。")
+        # 入力チェック
+        if (project_type in ["対面mtg", "その他"]) and not project_name.strip():
+            st.error(f"「{project_type}」が選択されています。企画名を入力してください。")
         elif not dates:
             st.error("日時を入力してください。")
-        elif not recipients_list:
-            st.error("少なくとも1名の謝礼対象者を入力してください。")
+        elif not recipients_data:
+            st.error("少なくとも1名の対象者を入力してください。")
         else:
-            # 入力チェックOKなら確認画面を表示するフラグを立てる
             st.session_state.show_confirm = True
             st.rerun()
 else:
-    # 確認画面
     st.warning("⚠️ 執行部メンバーは謝礼対象者に含まれません。このまま完了してもよろしいでしょうか。")
     
     col1, col2 = st.columns(2)
@@ -115,22 +154,35 @@ else:
                     now_str = datetime.now().strftime("%Y/%m/%d %H:%M:%S")
                     date_str = format_dates(dates)
                     
-                    # --- [スプシ①への書き込み] 謝礼対象者ごとの詳細データ ---
-                    sheet_detail = client.open_by_url(URL_SHEET_1).get_worksheet(0)
-                    detail_rows = []
-                    for recipient in recipients_list:
-                        # 例: [タイムスタンプ, 企画名, 日時, 対象者名]
-                        detail_rows.append([now_str, project_name, date_str, recipient])
-                    
-                    # 対象者の数だけ行を追加
-                    for row in detail_rows:
-                        sheet_detail.append_row(row)
+                    # --- [スプシ①] 詳細データの書き込み ---
+                    sheet_1 = client.open_by_url(URL_SHEET_1).get_worksheet(0)
+                    rows_for_sheet_1 = []
+                    for r in recipients_data:
+                        # A列: 企画名+企画区分, B列: 日時, C列: 対象者名, D列: 参加日数(無い場合は空白), E列: 報酬額
+                        rows_for_sheet_1.append([
+                            combined_project, 
+                            date_str, 
+                            r["name"], 
+                            r["days_str"], 
+                            r["reward"]
+                        ])
+                    for row in rows_for_sheet_1:
+                        sheet_1.append_row(row)
 
-                    # --- [スプシ②への書き込み] 企画単位のサマリーデータ ---
-                    sheet_summary = client.open_by_url(URL_SHEET_2).get_worksheet(0)
-                    # 例: [タイムスタンプ, 企画名, 日時, 対象者合計人数]
-                    summary_row = [now_str, project_name, date_str, f"{len(recipients_list)}名"]
-                    sheet_summary.append_row(summary_row)
+                    # --- [スプシ②] まとめログの書き込み ---
+                    sheet_2 = client.open_by_url(URL_SHEET_2).get_worksheet(0)
+                    rows_for_sheet_2 = []
+                    for r in recipients_data:
+                        # 対象者ごとに1行（13列分の空リストを作成）
+                        row2 = [""] * 13
+                        row2[0] = now_str                           # 1列目: タイムスタンプ
+                        row2[2] = r["name"]                         # 3列目: スタッフ名(対象者名)
+                        row2[3] = f"{combined_project}謝礼"          # 4列目: 企画名+区分+謝礼
+                        row2[12] = r["reward"]                      # 13列目: 報酬額
+                        rows_for_sheet_2.append(row2)
+                        
+                    for row in rows_for_sheet_2:
+                        sheet_2.append_row(row)
 
                     st.balloons()
                     st.session_state.show_confirm = False
