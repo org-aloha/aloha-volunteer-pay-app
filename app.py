@@ -176,8 +176,9 @@ else:
                             r["days_str"], 
                             r["reward"]
                         ])
-                    for row in rows_for_sheet_1:
-                        sheet_1.append_row(row)
+                    
+                    #append_rows でまとめて一括追記（上書き・消去を防ぎます）
+                    sheet_1.append_rows(rows_for_sheet_1)
 
                     # --- [スプシ②] まとめログの書き込み ---
                     sheet_2 = client.open_by_url(URL_SHEET_2).get_worksheet(0)
@@ -192,8 +193,8 @@ else:
                         row2[12] = r["reward"]                      # 13列目: 報酬額
                         rows_for_sheet_2.append(row2)
                         
-                    for row in rows_for_sheet_2:
-                        sheet_2.append_row(row)
+                    # スプシ②も append_rows で一括追記
+                    sheet_2.append_rows(rows_for_sheet_2)
 
                     st.balloons()
                     st.session_state.show_confirm = False
