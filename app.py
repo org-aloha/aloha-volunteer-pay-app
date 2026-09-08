@@ -11,7 +11,7 @@ import json
 URL_SHEET_1 = "https://docs.google.com/spreadsheets/d/1WvU83in9itV8pILiHEkITr6eRFRe5EE_xfHsNxRFD3g/edit?usp=sharing"
 
 # スプシ②：全体のまとめログを記録するシート
-URL_SHEET_2 = "https://docs.google.com/spreadsheets/d/13_8_vJI7zO7p2MY0VIYKwNRwHgEAm9frd1pdUCDmEXs/edit?usp=sharing"
+URL_SHEET_2 = "https://docs.google.com/spreadsheets/d/183tnFi4uVnGimmKJKSLAlasOU-AY83prU1v-Vou0-7g/edit?usp=sharing"
 
 # ==========================================
 # 2. 便利関数
@@ -192,9 +192,10 @@ else:
                         row2 = [""] * 13
                         row2[0] = now_str                           # 1列目: タイムスタンプ
                         row2[2] = r["name"]                         # 3列目: スタッフ名(対象者名)
-                        row2[3] = f"{combined_project}謝礼"          # 4列目: 企画名+区分+謝礼
-                        row2[11] = r["calc_str"]                    # 12列目: 計算式
-                        row2[12] = r["reward"]                      # 13列目: 報酬額
+                        row2[3] = f"法人口座"                        # 4列目: 立て替え内容
+                        row2[4] = f"{combined_project}謝礼"          # 5列目: 企画名+区分+謝礼
+                        row2[12] = r["calc_str"]                    # 13列目: 計算式
+                        row2[13] = r["reward"]                      # 14列目: 報酬額
                         rows_for_sheet_2.append(row2)
                         
                     next_row_2 = len(sheet_2.col_values(1)) + 1
