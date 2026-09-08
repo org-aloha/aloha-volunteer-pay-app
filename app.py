@@ -206,7 +206,6 @@ else:
                         row2 = [""] * 14
                         row2[0] = now_str  # 1列目: タイムスタンプ
                         row2[2] = r["name"]  # 3列目: スタッフ名
-                        row2[3] = "法人口座"  # 4列目: 立て替え内容
                         row2[4] = f"{combined_project}謝礼"  # 5列目
                         row2[12] = r["calc_str"]  # 13列目: 計算式
                         row2[13] = r["reward"]  # 14列目: 報酬額
